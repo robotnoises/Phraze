@@ -20,7 +20,7 @@ namespace Phraze.Utils
         // Does a "Fuzzy" match from start point to end endpoint... i.e. a fuzzy phrase
         public Fuzzy(string start, string end)
         {
-            _matcher = new Regex(string.Format("({0})([\\w\\W]+)({1})", ToFuzzyWord(start), ToFuzzyWord(end)), RegexOptions.IgnoreCase);
+            _matcher = new Regex(string.Format("({0})({1})({2})", ToFuzzyWord(start), @"[\w\W]{3,}", ToFuzzyWord(end)), RegexOptions.IgnoreCase);
         }
 
         // Checks to see if there is a matched word or phrase

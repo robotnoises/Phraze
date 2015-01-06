@@ -58,7 +58,7 @@ namespace PhrazeTests
             var matchText = "one two four";
             var targetPhrases = new List<string>();
             
-            targetPhrases.Add("If .. wins, I will");
+            targetPhrases.Add("one two three four");
             targetPhrases.Add("dsfklsdjlkjss ddd");
             targetPhrases.Add("dsf gdf");
             targetPhrases.Add("sdfs");
@@ -72,8 +72,12 @@ namespace PhrazeTests
         [TestMethod]
         public void Test4()
         {
-            var matchText = "[â€“]Auburn Tigers3_exclamation_marks 139 points140 points141 points 1 year ago (51 children)sorry, this has been archived and can no longer be voted onFriendly bet - If Alabama wins, I will give complete control on my account to the lucky winner until the SEC championship (one week) to do with as they please (comment, message, add/drop subs, change flairs, whatever).\n\nIf Auburn wins, I want either the same or something equally delightful.\n\nWho is game?\n\n</form>permalink";
+            var matchText = "[â€“]LSU TigersYesh 14 points15 points16 points 2 hours ago (2 children)I want to be part of the mercenary QB trend.\n\nC'mon, Braxton. Come to LSU and lead us to a championship. I'd even stop hating on OSU if you'd just come to BR for a year. \n\n</form>permalink";
+            var targetPhrase = "If ... loses, you";
 
+            var matcher = new Phrase(targetPhrase);
+
+            Assert.IsFalse(matcher.FuzzyMatch(matchText));
         }
     }
 }
