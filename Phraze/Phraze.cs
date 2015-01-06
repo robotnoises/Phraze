@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Phraze.Exceptions;
 using Phraze.Utils;
+using System.Threading.Tasks;
 
 namespace Phraze
 {
@@ -102,15 +103,30 @@ namespace Phraze
 
         public bool HasMatch(string matchText)
         {
-            foreach (var phraseMatcher in this)
+            var matchFound = false;
+
+            while (!matchFound)
             {
-                if (phraseMatcher.FuzzyMatch(matchText))
+                Parallel.ForEach(this, phrase =>
                 {
-                    return true;
-                }
+                    if (phrase.FuzzyMatch(matchText))
+                    {
+                        matchFound = true;
+                    }
+                });
             }
 
-            return false;
+            return matchFound;
+            
+            //foreach (var phraseMatcher in this)
+            //{
+            //    if (phraseMatcher.FuzzyMatch(matchText))
+            //    {
+            //        return true;
+            //    }
+            //}
+
+            //return false;
         }
 
         public Phrase GetTopMatch(string matchText)
