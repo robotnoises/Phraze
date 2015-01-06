@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using Phraze.Exceptions;
+using Phraze.Utils;
 
 namespace Phraze
 {
@@ -13,190 +14,118 @@ namespace Phraze
     public class Phrase
     {
         private string _phrase;
-        private HashSet<string> _phraseWords;
+        private HashSet<string> _phraseWords; 
         private string _boundaryStart;
         private string _boundaryEnd;
                 
         public Phrase(string input)
         {
-            Init(input);
-        }
-
-        public bool Match(string matchText, double confidenceFloor = 0.7)
-        {
-            return CalculateMatchConfidence(matchText) >= confidenceFloor;
-        }
-
-        private void Init(string input)
-        {
             _phrase = input;
-                        
+
             if (!string.IsNullOrEmpty(_phrase))
             {
-                var wordArray = _phrase.Split(delimeters, StringSplitOptions.RemoveEmptyEntries);
+                var wordArray = _phrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries);
+                
                 _phraseWords = new HashSet<string>(wordArray);
                 _boundaryStart = RemoveNonWordChars(wordArray[0]);
                 _boundaryEnd = RemoveNonWordChars(wordArray[wordArray.Length - 1]);
             }
             else
-            { 
-                // TODO: throw Exception
+            {
+                throw new EmptyPhrazeException("Phrase cannot be empty.");
             }
         }
-        
-        private double CalculateMatchConfidence(string matchText)
+
+        public bool FuzzyMatch(string matchText, double confidenceFloor = 0.7)
         {
-            var confidence = 0.0;
-            var phraseMatcher = new Fuzzy(_boundaryStart, _boundaryEnd);
-
-            // If matcher can't find the boundary words, return with 0 confidence
-            if (!phraseMatcher.IsMatch(matchText)) return 0.0;
-
-            var matchScore = ScoreMatches(phraseMatcher.GetMatchedString(matchText));
-
-            // temp 
-            confidence = 1.0;
-
-            return confidence;
+            return CalculateMatchConfidence(matchText) >= confidenceFloor;
         }
 
-        private double ScoreMatches(string matchText)
+        private double CalculateMatchConfidence(string matchText)
         {
-            var words = new HashSet<string>(matchText.Split(' ')); // Todo: better split
-            var matchCount = 0.0; // Already matched boundary words
-            var score = 0.0;
-            var wordCount = (double)_phraseWords.Count;
-            
+            var phraseMatcher = new Fuzzy(_boundaryStart, _boundaryEnd);
+
+            // If matcher can't find any phrase that matches, return with 0 confidence
+            if (!phraseMatcher.IsMatch(matchText)) return 0.0;
+
+            var matchedPhrase = phraseMatcher.GetMatchedString(matchText);
+            var words = new HashSet<string>(matchedPhrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries)); 
+            var phraseWordCount = _phraseWords.Count;
+            var matchTextWordCount = words.Count;
+            var confidence = 0.0;
+            var matchCount = 0.0;
+
             foreach (var word in words)
             {
                 var matcher = new Fuzzy(word);
-                
+
                 if (matcher.IsMatch(_phrase))
                 {
                     matchCount++;
                 }
             }
 
-            score = matchCount / wordCount;
+            // Calculate the scores 
+            var scores = new List<double>();
 
-            return score;
+            scores.Add(matchCount / phraseWordCount);
+            scores.Add(matchCount / matchTextWordCount);
+            
+            confidence = DoAverage(scores);
+
+            return confidence;
         }
-
+        
         private string RemoveNonWordChars(string word)
         {
             return Regex.Replace(word, @"[\W]", "");
         }
 
-        private char[] delimeters = 
-        { 
-            ' ', 
-            ',', 
-            ';', 
-            '-', 
-            '_', 
-            '|', 
-            '\\', 
-            '/' 
-        };
+        private double DoAverage(ICollection<double> values)
+        {
+            return values.Sum() / values.Count;
+        }
     }
 
-    internal class Fuzzy
+    /// <summary>
+    /// Todo
+    /// </summary>
+    public class PhraseCollection : List<Phrase>
     {
-        private Regex _matcher;
-        // private static HashSet<string> matchSet; // not sure...
-
-        // Does a "Fuzzy" match for a single word
-        public Fuzzy(string input)
+        public PhraseCollection(ICollection<string> phrases) 
         {
-            _matcher = new Regex(ToFuzzyWord(input), RegexOptions.IgnoreCase);
+            foreach (var phrase in phrases)
+            {
+                this.Add(new Phrase(phrase));
+            }
         }
 
-        // Does a "Fuzzy" match from start point to end endpoint... i.e. a fuzzy phrase
-        public Fuzzy(string start, string end)
+        public bool HasMatch(string matchText)
         {
-            _matcher = new Regex(string.Format("({0})([\\w\\s]+)({1})", ToFuzzyWord(start), ToFuzzyWord(end)), RegexOptions.IgnoreCase);
+            foreach (var phraseMatcher in this)
+            {
+                if (phraseMatcher.FuzzyMatch(matchText))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        // Checks to see if there is a matched word or phrase
-        public bool IsMatch(string textToMatch)
-        { 
-            return _matcher.IsMatch(textToMatch);
-        }
-
-        // TODO: Returns only the matched string
-        public string GetMatchedString(string textToMatch)
+        public Phrase GetTopMatch(string matchText)
         {
-            var matches = _matcher.Matches(textToMatch).Cast<Match>().Select(x => x.Value).ToList();
-
-            if (matches.Count <= 1) return matches.FirstOrDefault();
-
-            // Todo, if there are multiple matches, return the highest scoring match
-            return matches.FirstOrDefault();
-        }
-        
-        private static string ToFuzzyWord(string input)
-        {
-            var asCharArray = input.ToCharArray();
-            var numChars = asCharArray.Length;
-
-            if (numChars <= 3) return input;
-
-            var firstChar = asCharArray[0];
-            var lastChar = asCharArray[numChars - 1];
-            var innerChars = RemoveEnds(asCharArray.ToArray());
+            foreach (var phrase in this)
+            {
+                if (phrase.FuzzyMatch(matchText))
+                {
+                    return phrase;
+                }
+            }
             
-            for (var i = 1; i < numChars - 1; i++)
-            {
-                var idx = i - 1;
-                innerChars[idx] = asCharArray[i];
-            }
-
-            var charHashSet = new HashSet<char>(innerChars);
-            var innerCharsAsString = new string(charHashSet.ToArray());
-            var pattern = new StringBuilder(100);
-
-            pattern.Append(@"\b" + firstChar);
-            pattern.Append(string.Format("[{0}]", innerCharsAsString));
-            pattern.Append("{" + (innerChars.Length - 1).ToString() + ",");
-            pattern.Append((innerChars.Length).ToString() + "}");
-            pattern.Append(@"[\w]{0,1}");
-            pattern.Append(lastChar + @"\b");
-
-            return pattern.ToString();
+            return null;
         }
 
-        // TODO: make an interface for the following
-
-        private static string[] RemoveEnds(string[] array)
-        {
-            if (array.Length <= 2) return array;
-
-            var numItems = array.Length;
-            var newArray = new string[numItems - 2];
-            
-            for (var i = 1; i < numItems - 1; i++)
-            {
-                var idx = i - 1;
-                newArray[idx] = array[i];
-            }
-
-            return newArray;
-        }
-
-        private static char[] RemoveEnds(char[] array)
-        {
-            if (array.Length <= 2) return array;
-
-            var numItems = array.Length;
-            var newArray = new char[numItems - 2];
-
-            for (var i = 1; i < numItems - 1; i++)
-            {
-                var idx = i - 1;
-                newArray[idx] = array[i];
-            }
-
-            return newArray;
-        }
+        // Todo GetMatches
     }
 }

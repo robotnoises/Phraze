@@ -1,0 +1,9 @@
+﻿{
+    "title": "wordConversions.json",
+    "description": "A two-dimensional array of words to be treated as synonyms",
+    "words": [
+        [ "I will", "I'll", "Ill"],
+        [ "win", "wins", "doesn't lose" ],
+        [ "doesn't", "does not"]
+    ]
+}
