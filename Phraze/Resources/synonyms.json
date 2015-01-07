@@ -2,38 +2,41 @@
     "title": "synonyms.json",
     "description": "A two-dimensional array of words to be treated as synonyms",
     "words": [
+
         // Contractions
+
+        // Todo, include no-apostrphes version of each word
         [ "ain't", "am not", "are not", "is not", "has not", "have not" ],
-        [ "aren't",	"are not", "am not" ],
-        [ "can't",	"cannot" ],
+        [ "aren't", "are not", "am not" ],
+        [ "can't", "cannot" ],
         [ "could've", "could have" ],
         [ "couldn't", "could not" ],
         [ "couldn't've", "could not have" ],
-        [ "didn't",	"did not" ],
-        [ "doesn't",	"does not" ],
-        [ "don't",	"do not" ],
-        [ "hadn't",	"had not" ],
-        [ "hadn't've",	"had not have" ],
-        [ "hasn't",	"has not" ],
+        [ "didn't", "did not" ],
+        [ "doesn't", "does not" ],
+        [ "don't", "do not" ],
+        [ "hadn't", "had not" ],
+        [ "hadn't've", "had not have" ],
+        [ "hasn't", "has not" ],
         [ "haven't", "have not" ],
         [ "he'd", "he had", "he would" ],
         [ "he'd've", "he would have" ],
-        [ "he'll",	"he shall", "he will" ],
+        [ "he'll", "he shall", "he will" ],
         [ "he's", "he has", "he is" ],
         [ "how'd", "how did", "how would" ],
-        [ "how'll",	"how will" ],
-        [ "how's",	"how has", "how is", "how does" ],
+        [ "how'll", "how will" ],
+        [ "how's", "how has", "how is", "how does" ],
         [ "I'd", "I had", "I would" ],
-        [ "I'd've",	"I would have" ],
+        [ "I'd've", "I would have" ],
         [ "I'll", "I shall", "I will" ],
         [ "I'm", "I am" ],
         [ "I've", "I have" ],
         [ "isn't", "is not" ],
         [ "it'd", "it had", "it would" ],
         [ "it'd've", "it would have" ],
-        [ "it'll",	"it shall", "it will" ],
+        [ "it'll", "it shall", "it will" ],
         [ "it's", "it has", "it is" ],
-        [ "let's",	"let us" ],
+        [ "let's", "let us" ],
         [ "ma'am", "madam" ],
         [ "mightn't", "might not" ],
         [ "mightn't've", "might not have" ],
@@ -98,7 +101,11 @@
         [ "you've", "you have" ],
 
         // Similar words/phrases
-        [ "win", "wins", "doesn't lose", "does not lose", "don't lose", "dont lose", "do not lose" ],
-        [ "lose", "loses", "doesn't win", "does not win", "don't win", "dont win", "do not win" ]
+
+        [ "win", "wins", "doesn't lose", "does not lose", "don't lose", "dont lose", "do not lose", "beat you", "beat yall", "beat y'all" ],
+        [ "lose", "loses", "doesn't win", "does not win", "don't win", "dont win", "do not win", "beat us" ],
+        [ "must", "have to" ],
+        [ "anyone", "anybody" ],
+        [ "change", "swap" ]
     ]
 }
