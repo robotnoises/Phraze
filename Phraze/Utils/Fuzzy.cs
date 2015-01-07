@@ -24,12 +24,12 @@ namespace Phraze.Utils
         }
 
         // Checks to see if there is a matched word or phrase
-        public bool IsMatch(string textToMatch)
+        public bool HasMatch(string textToMatch)
         {
             return _matcher.IsMatch(textToMatch);
         }
 
-        // TODO: Returns only the matched string
+        // TODO: Returns only the matched string, need to handle if there are multiple matches
         public string GetMatchedString(string textToMatch)
         {
             var matches = _matcher.Matches(textToMatch).Cast<Match>().Select(x => x.Value).ToList();

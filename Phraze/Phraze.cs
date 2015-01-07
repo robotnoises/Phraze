@@ -18,7 +18,7 @@ namespace Phraze
         private HashSet<string> _phraseWords; 
         private string _boundaryStart;
         private string _boundaryEnd;
-                
+        
         public Phrase(string input)
         {
             _phrase = input;
@@ -47,29 +47,32 @@ namespace Phraze
             var phraseMatcher = new Fuzzy(_boundaryStart, _boundaryEnd);
 
             // If matcher can't find any phrase that matches, return with 0 confidence
-            if (!phraseMatcher.IsMatch(matchText)) return 0.0;
+            if (!phraseMatcher.HasMatch(matchText)) return 0.0;
 
             var matchedPhrase = phraseMatcher.GetMatchedString(matchText);
             var words = new HashSet<string>(matchedPhrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries)); 
-            var phraseWordCount = _phraseWords.Count;
+            var targetPhraseWordCount = _phraseWords.Count;
             var matchTextWordCount = words.Count;
             var confidence = 0.0;
             var matchCount = 0.0;
+            var locker = new object();
 
-            foreach (var word in words)
+            Parallel.ForEach(words, word =>
             {
                 var matcher = new Fuzzy(word);
 
-                if (matcher.IsMatch(_phrase))
+                if (matcher.HasMatch(_phrase))
                 {
-                    matchCount++;
+                    lock (locker) matchCount++;
                 }
-            }
+            });
 
             // Calculate the scores 
             var scores = new List<double>();
 
-            scores.Add(matchCount / phraseWordCount);
+            // How many matches within the context of the targetphrase?
+            scores.Add(matchCount / targetPhraseWordCount);
+            // How many of the input text words were matches?
             scores.Add(matchCount / matchTextWordCount);
             
             confidence = DoAverage(scores);
@@ -93,6 +96,11 @@ namespace Phraze
     /// </summary>
     public class PhraseCollection : List<Phrase>
     {
+        public PhraseCollection()
+        { 
+        
+        }
+
         public PhraseCollection(ICollection<string> phrases) 
         {
             foreach (var phrase in phrases)
@@ -105,43 +113,34 @@ namespace Phraze
         {
             var matchFound = false;
 
-            while (!matchFound)
-            {
-                Parallel.ForEach(this, phrase =>
-                {
-                    if (phrase.FuzzyMatch(matchText))
-                    {
-                        matchFound = true;
-                    }
-                });
-            }
-
-            return matchFound;
-            
-            //foreach (var phraseMatcher in this)
-            //{
-            //    if (phraseMatcher.FuzzyMatch(matchText))
-            //    {
-            //        return true;
-            //    }
-            //}
-
-            //return false;
-        }
-
-        public Phrase GetTopMatch(string matchText)
-        {
-            foreach (var phrase in this)
+            Parallel.ForEach(this, phrase =>
             {
                 if (phrase.FuzzyMatch(matchText))
                 {
-                    return phrase;
+                    matchFound = true;
                 }
-            }
+            });
             
-            return null;
+            return matchFound;
         }
 
-        // Todo GetMatches
+        public PhraseCollection GetMatches(string matchText)
+        {
+            var matchedPhrases = new PhraseCollection();
+            var locker = new object();
+
+            Parallel.ForEach(this, phrase => 
+            {
+                if (phrase.FuzzyMatch(matchText))
+                {
+                    lock (locker)
+                    {
+                        matchedPhrases.Add(phrase);
+                    }
+                }
+            });
+
+            return matchedPhrases;
+        }
     }
 }
