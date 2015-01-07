@@ -45,18 +45,18 @@ namespace Phraze.Utils
         {
             var words = Synonyms.GetAll(input);
             var locker = new object();
-            var pattern = new StringBuilder(1000);
+            var fuzzyWord = new StringBuilder(1000);
 
             Parallel.ForEach(words, word => 
             {
-                var asCharArray = input.ToCharArray();
+                var asCharArray = word.ToCharArray();
                 var numChars = asCharArray.Length;
 
                 if (numChars <= 3)
                 {
                     lock (locker)
                     {
-                        pattern.Append(@"\b" + input + @"\b");
+                        fuzzyWord.Append(@"\b" + word + @"\b|");
                         return; // Break-out of this thread
                     }
                 }
@@ -76,16 +76,16 @@ namespace Phraze.Utils
 
                 lock (locker)
                 {
-                    pattern.Append(@"\b" + firstChar);
-                    pattern.Append(string.Format("[{0}]", innerCharsAsString));
-                    pattern.Append("{" + (innerChars.Length - 1).ToString() + ",");
-                    pattern.Append((innerChars.Length).ToString() + "}");
-                    pattern.Append(@"[\w]{0,1}");
-                    pattern.Append(lastChar + @"\b | ");
+                    fuzzyWord.Append(@"\b" + firstChar);
+                    fuzzyWord.Append(string.Format("[{0}]", innerCharsAsString));
+                    fuzzyWord.Append("{" + (innerChars.Length - 1).ToString() + ",");
+                    fuzzyWord.Append((innerChars.Length).ToString() + "}");
+                    fuzzyWord.Append(@"[\w]{0,1}");
+                    fuzzyWord.Append(lastChar + @"\b|");
                 }
             });
             
-            return TrimEndOrOperator(pattern.ToString());
+            return TrimEndOrOperator(fuzzyWord.ToString());
         }
 
         private static string TrimEndOrOperator(string input)

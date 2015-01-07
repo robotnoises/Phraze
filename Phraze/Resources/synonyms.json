@@ -4,8 +4,8 @@
     "words": [
 
         // Contractions
-
         // Todo, include no-apostrphes version of each word
+
         [ "ain't", "am not", "are not", "is not", "has not", "have not" ],
         [ "aren't", "are not", "am not" ],
         [ "can't", "cannot" ],
@@ -104,8 +104,9 @@
 
         [ "win", "wins", "doesn't lose", "does not lose", "don't lose", "dont lose", "do not lose", "beat you", "beat yall", "beat y'all" ],
         [ "lose", "loses", "doesn't win", "does not win", "don't win", "dont win", "do not win", "beat us" ],
-        [ "must", "have to" ],
+        [ "must", "have to", "got to", "haveta", "gotta" ],
         [ "anyone", "anybody" ],
-        [ "change", "swap" ]
+        [ "change", "swap" ],
+        [ "want to", "wanna" ]
     ]
 }

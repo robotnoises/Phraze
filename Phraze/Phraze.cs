@@ -49,35 +49,38 @@ namespace Phraze
             // If matcher can't find any phrase that matches, return with 0 confidence
             if (!phraseMatcher.HasMatch(matchText)) return 0.0;
 
+            // Get the exact phrase that was matched
             var matchedPhrase = phraseMatcher.GetMatchedString(matchText);
-            var words = new HashSet<string>(matchedPhrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries)); 
-            var targetPhraseWordCount = _phraseWords.Count;
-            var matchTextWordCount = words.Count;
-            var confidence = 0.0;
-            var matchCount = 0.0;
+
+            // Create a word array from the target phrase
+            var targetPhraseWords = _phrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries).ToList();
+            
+            // Createa HashSet of "Fuzzy" words from the list of tart words
+            var fuzzyWords = new HashSet<Fuzzy>(targetPhraseWords.Select(x => new Fuzzy(x)));
+
+            // Count-up the matches
+            var matchedWordsCount = 0.0;
             var locker = new object();
 
-            Parallel.ForEach(words, word =>
+            Parallel.ForEach(fuzzyWords, fuzzyWord =>
             {
-                var matcher = new Fuzzy(word);
-
-                if (matcher.HasMatch(_phrase))
+                if (fuzzyWord.HasMatch(matchedPhrase))
                 {
-                    lock (locker) matchCount++;
+                    lock (locker) matchedWordsCount++;
                 }
             });
 
-            // Calculate the scores 
+            // Calculate the scores
             var scores = new List<double>();
 
-            // How many matches within the context of the targetphrase?
-            scores.Add(matchCount / targetPhraseWordCount);
-            // How many of the input text words were matches?
-            scores.Add(matchCount / matchTextWordCount);
-            
-            confidence = DoAverage(scores);
+            // How many of the input text words were matches? Ex: If 3 out of 4 words were matched, that would return a score of .75
+            scores.Add(matchedWordsCount / targetPhraseWords.Count);
 
-            return confidence;
+            // How many matches were there within the context of the targetphrase?
+            scores.Add(matchedWordsCount / matchedPhrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries).Count());
+
+            // Average the results            
+            return DoAverage(scores);
         }
         
         private string RemoveNonWordChars(string word)

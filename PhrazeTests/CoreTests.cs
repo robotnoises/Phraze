@@ -10,7 +10,7 @@ namespace PhrazeTests
     public class CoreTests
     {
         [TestMethod]
-        public void DoFuzzyMatch_ValidData()
+        public void BasicMatch()
         {
             var targetPhrase = "This is a medium-sized test phrase"; // This is what the application is configured to look for
             var matchText1 = "Thos is a uh medium phrase."; // This is an input phrase to test against the targetPhrase
@@ -28,7 +28,7 @@ namespace PhrazeTests
         }
 
         [TestMethod]
-        public void Test1()
+        public void ExactMatch()
         {
             var targetPhrase = "If ... wins, I will";
             var matchText = "Friendly bet - If Alabama wins, I will give complete control on my account to the lucky winner until the SEC championship (one week) to do with as they please (comment, message, add/drop subs, change flairs, whatever). If Auburn wins, I want either the same or something equally delightful. Who is game?";
@@ -41,7 +41,7 @@ namespace PhrazeTests
         }
 
         [TestMethod]
-        public void Test2()
+        public void WontMatchWordsOutOfOrder()
         {
             var targetPhrase = "If ... wins, I will";
             var matchPhrase = "This is a nonsense phrase containing all of the above words, for instance: foo bar wins if foo bar baz I will";
@@ -54,31 +54,15 @@ namespace PhrazeTests
         }
 
         [TestMethod]
-        public void Test3()
+        public void FuzzyMatch()
         {
-            var matchText = "one two four";
-            var targetPhrases = new List<string>();
-            
-            targetPhrases.Add("one two three four");
-            targetPhrases.Add("dsfklsdjlkjss ddd");
-            targetPhrases.Add("dsf gdf");
-            targetPhrases.Add("sdfs");
-            targetPhrases.Add("sdfsdfsd dsfs");
-
-            var phrazes = new PhraseCollection(targetPhrases);
-
-            Assert.IsTrue(phrazes.HasMatch(matchText));
-        }
-
-        [TestMethod]
-        public void Test4()
-        {
-            var matchText = "[â€“]LSU TigersYesh 14 points15 points16 points 2 hours ago (2 children)I want to be part of the mercenary QB trend.\n\nC'mon, Braxton. Come to LSU and lead us to a championship. I'd even stop hating on OSU if you'd just come to BR for a year. \n\n</form>permalink";
-            var targetPhrase = "If ... loses, you";
+            var matchText = "WHERE ARE YOU /U/CLAUDELEMIEUX?!? You promised me a bet. Don't back down now. It's a straight up bet. No point spreads. No parlays. If Ohio State wins, you have to make a video of yourself singing the Buckeye Battle Cry and post it to /r/cfb along with a brief history of Ohio State Football. If Michigan wins, I'll do the same for your dumb school/fight song. And Ill change my flair since you mentioned that. Do we have a deal?";
+            var targetPhrase = "If ... wins, you must";
 
             var matcher = new Phrase(targetPhrase);
-
-            Assert.IsFalse(matcher.FuzzyMatch(matchText));
+            var isMatch = matcher.FuzzyMatch(matchText);
+            
+            Assert.IsTrue(isMatch);
         }
 
         [TestMethod]
