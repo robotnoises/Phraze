@@ -98,6 +98,7 @@
         [ "you've", "you have" ],
 
         // Similar words/phrases
-        [ "win", "wins", "doesn't lose", "does not lose", "don't lose", "dont lose", "do not lose" ]
+        [ "win", "wins", "doesn't lose", "does not lose", "don't lose", "dont lose", "do not lose" ],
+        [ "lose", "loses", "doesn't win", "does not win", "don't win", "dont win", "do not win" ]
     ]
 }
