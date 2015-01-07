@@ -8,7 +8,7 @@ using Resources = Phraze.Properties.Resources;
 
 namespace Phraze.Utils
 {
-    internal static class Synonyms
+    public static class Synonyms
     {
         private static List<string[]> _synonyms;
         private static HashSet<string> _words;
@@ -18,14 +18,33 @@ namespace Phraze.Utils
             if (_words == null) GetWords();
         }
 
-        public static void Foo()
+        public static IEnumerable<string> GetSynonyms(string word)
         {
-            var temp = 1 + 1;
+            if (!HasSynonym(word)) return Enumerable.Empty<string>();
+            
+            var list = _synonyms.Where(x => x.Contains(word));
+            var flatList = new List<string>();
+            var locker = new object();
+
+            Parallel.ForEach(list, item =>
+            {
+                lock (locker)
+                {
+                    flatList.AddRange(item);
+                }
+            });
+
+            return new HashSet<string>(flatList);
+        }
+
+        private static bool HasSynonym(string word)
+        {
+            return _words.Contains(word.ToLower());
         }
 
         private static void GetWords()
         {
-            var resource = JsonConvert.DeserializeObject<Words>(Resources.wordConversions);
+            var resource = JsonConvert.DeserializeObject<Words>(Resources.synonyms);
             _synonyms = resource.words.ToList();
 
             var listOfWords = new List<string>();
@@ -35,7 +54,7 @@ namespace Phraze.Utils
                 listOfWords.AddRange(wordGroup);
             }
 
-            _words = new HashSet<string>(listOfWords);
+            _words = new HashSet<string>(listOfWords.Select(x => x.ToLower()));
         }
     }
 

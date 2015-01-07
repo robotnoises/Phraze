@@ -1,7 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Phraze;
 using System.Collections.Generic;
+using Phraze;
+using Phraze.Utils;
 
 namespace PhrazeTests
 {
@@ -78,6 +79,16 @@ namespace PhrazeTests
             var matcher = new Phrase(targetPhrase);
 
             Assert.IsFalse(matcher.FuzzyMatch(matchText));
+        }
+
+        [TestMethod]
+        public void GetSynonyms()
+        {
+            var word = "y'all";
+
+            var listOfSynonyms = Synonyms.GetSynonyms(word);
+
+            Assert.IsNotNull(listOfSynonyms);
         }
     }
 }

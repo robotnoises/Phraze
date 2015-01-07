@@ -61,11 +61,19 @@ namespace Phraze.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to {
+        ///    &quot;title&quot;: &quot;synonyms.json&quot;,
+        ///    &quot;description&quot;: &quot;A two-dimensional array of words to be treated as synonyms&quot;,
+        ///    &quot;words&quot;: [
+        ///        [ &quot;I will&quot;, &quot;I&apos;ll&quot;, &quot;Ill&quot;],
+        ///        [ &quot;win&quot;, &quot;wins&quot;, &quot;doesn&apos;t lose&quot; ],
+        ///        [ &quot;doesn&apos;t&quot;, &quot;does not&quot;]
+        ///    ]
+        ///}.
         /// </summary>
-        internal static string wordConversions {
+        internal static string synonyms {
             get {
-                return ResourceManager.GetString("wordConversions", resourceCulture);
+                return ResourceManager.GetString("synonyms", resourceCulture);
             }
         }
     }
