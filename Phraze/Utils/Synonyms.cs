@@ -15,12 +15,17 @@ namespace Phraze.Utils
 
         static Synonyms()
         {
-            if (_words == null) GetWords();
+            if (_words == null) GetSetWords();
         }
 
-        public static IEnumerable<string> GetSynonyms(string word)
+        public static IEnumerable<string> GetAll(string word)
         {
-            if (!HasSynonym(word)) return Enumerable.Empty<string>();
+            if (!HasSynonym(word))
+            { 
+                var setOfOne = new HashSet<string>();
+                setOfOne.Add(word);
+                return setOfOne;
+            }
             
             var list = _synonyms.Where(x => x.Contains(word));
             var flatList = new List<string>();
@@ -42,7 +47,7 @@ namespace Phraze.Utils
             return _words.Contains(word.ToLower());
         }
 
-        private static void GetWords()
+        private static void GetSetWords()
         {
             var resource = JsonConvert.DeserializeObject<Words>(Resources.synonyms);
             _synonyms = resource.words.ToList();

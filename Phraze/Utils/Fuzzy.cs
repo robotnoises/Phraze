@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 
 namespace Phraze.Utils
@@ -42,36 +43,58 @@ namespace Phraze.Utils
 
         private static string ToFuzzyWord(string input)
         {
-            var asCharArray = input.ToCharArray();
-            var numChars = asCharArray.Length;
+            var words = Synonyms.GetAll(input);
+            var locker = new object();
+            var pattern = new StringBuilder(1000);
 
-            if (numChars <= 3) return @"\b" + input + @"\b";
-
-            var firstChar = asCharArray[0];
-            var lastChar = asCharArray[numChars - 1];
-            var innerChars = RemoveEnds(asCharArray.ToArray());
-
-            for (var i = 1; i < numChars - 1; i++)
+            Parallel.ForEach(words, word => 
             {
-                var idx = i - 1;
-                innerChars[idx] = asCharArray[i];
-            }
+                var asCharArray = input.ToCharArray();
+                var numChars = asCharArray.Length;
 
-            var charHashSet = new HashSet<char>(innerChars); // Removes duplicate chars
-            var innerCharsAsString = new string(charHashSet.ToArray());
+                if (numChars <= 3)
+                {
+                    lock (locker)
+                    {
+                        pattern.Append(@"\b" + input + @"\b");
+                        return; // Break-out of this thread
+                    }
+                }
 
-            var pattern = new StringBuilder(100);
+                var firstChar = asCharArray[0];
+                var lastChar = asCharArray[numChars - 1];
+                var innerChars = RemoveEnds(asCharArray.ToArray());
 
-            pattern.Append(@"\b" + firstChar);
-            pattern.Append(string.Format("[{0}]", innerCharsAsString));
-            pattern.Append("{" + (innerChars.Length - 1).ToString() + ",");
-            pattern.Append((innerChars.Length).ToString() + "}");
-            pattern.Append(@"[\w]{0,1}");
-            pattern.Append(lastChar + @"\b");
+                for (var i = 1; i < numChars - 1; i++)
+                {
+                    var idx = i - 1;
+                    innerChars[idx] = asCharArray[i];
+                }
 
-            return pattern.ToString();
+                var charHashSet = new HashSet<char>(innerChars); // Note: Removes duplicate chars
+                var innerCharsAsString = new string(charHashSet.ToArray());
+
+                lock (locker)
+                {
+                    pattern.Append(@"\b" + firstChar);
+                    pattern.Append(string.Format("[{0}]", innerCharsAsString));
+                    pattern.Append("{" + (innerChars.Length - 1).ToString() + ",");
+                    pattern.Append((innerChars.Length).ToString() + "}");
+                    pattern.Append(@"[\w]{0,1}");
+                    pattern.Append(lastChar + @"\b | ");
+                }
+            });
+            
+            return TrimEndOrOperator(pattern.ToString());
         }
 
+        private static string TrimEndOrOperator(string input)
+        { 
+            char[] charsToTrim = { ' ', '|' };
+            
+            return input.TrimEnd(charsToTrim);
+        }
+        
         // TODO: make an interface for the following
 
         private static string[] RemoveEnds(string[] array)

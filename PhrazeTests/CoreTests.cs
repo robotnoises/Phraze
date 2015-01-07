@@ -86,7 +86,7 @@ namespace PhrazeTests
         {
             var word = "y'all";
 
-            var listOfSynonyms = Synonyms.GetSynonyms(word);
+            var listOfSynonyms = Synonyms.GetAll(word);
 
             Assert.IsNotNull(listOfSynonyms);
         }
