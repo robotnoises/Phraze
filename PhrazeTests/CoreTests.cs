@@ -78,7 +78,6 @@ namespace PhrazeTests
         [TestMethod]
         public void Temp()
         {
-
             var matchText = "If the filthy cougs beat us. I'll change flair for the whole off season, burn 3 huskie shirts on camera while wearing a coug shirt chanting Huck the fuskies. Provided a coug makes the same guarantee.";
             var targetPhrase = "If ... lose, I'll";
 
@@ -86,6 +85,19 @@ namespace PhrazeTests
             var isMatch = matcher.FuzzyMatch(matchText);
 
             Assert.IsTrue(isMatch);
+        }
+
+        [TestMethod]
+        public void Temp2()
+        {
+            var matchText = @"If Georgia Tech doesn't beat FSU, I'll record and post a video of me doing the War Chant for 5 minutes straight.";
+            var targetPhrase = "If ... lose, I'll";
+
+            var matcher = new Phrase(targetPhrase);
+            var isMatch = matcher.FuzzyMatch(matchText);
+
+            Assert.IsTrue(isMatch);
+
         }
     }
 }

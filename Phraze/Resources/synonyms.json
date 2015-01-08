@@ -103,10 +103,11 @@
         // Similar words/phrases
 
         [ "win", "wins", "doesn't lose", "does not lose", "don't lose", "dont lose", "do not lose", "beat you", "beat yall", "beat y'all" ],
-        [ "lose", "loses", "doesn't win", "does not win", "don't win", "dont win", "do not win", "beat us" ],
+        [ "lose", "loses", "doesn't win", "does not win", "don't win", "dont win", "do not win", "beat us", "doesn't beat", "doesnt beat" ],
         [ "must", "have to", "got to", "haveta", "gotta" ],
         [ "anyone", "anybody" ],
         [ "change", "swap" ],
-        [ "want to", "wanna" ]
+        [ "want to", "wanna" ],
+        [ "bet", "wager" ]
     ]
 }
