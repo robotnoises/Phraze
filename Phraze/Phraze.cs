@@ -55,7 +55,7 @@ namespace Phraze
             // Create a word array from the target phrase
             var targetPhraseWords = _phrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries).ToList();
             
-            // Createa HashSet of "Fuzzy" words from the list of tart words
+            // Create a HashSet of "Fuzzy" words from the list of tart words
             var fuzzyWords = new HashSet<Fuzzy>(targetPhraseWords.Select(x => new Fuzzy(x)));
 
             // Count-up the matches

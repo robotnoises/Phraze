@@ -99,5 +99,23 @@ namespace PhrazeTests
             Assert.IsTrue(isMatch);
 
         }
+
+        /* Weird matches */
+
+        /*
+            I tried smoke recently and it was fantastic, but a little pricey. It has a really cool view of downtown Dallas.
+            Also you can find Cane Rosso in both Dallas and Fort Worth which is really good pizza.
+            Edit: If you go to cane Rosso the honey bastard isn't on their menu, but it's amazing I would look into it.
+         */
+
+        /*
+            Never bet against Boise in the Fiesta Bowl.
+         */
+
+        /*
+            It only makes zero sense if you have no respect for the atmosphere and culture BSU has built around its football program.
+            Harsin, Yates, and Stanford built a monster of a team in just one year, and it improved by freakish leaps and bounds over the course of the season. The BSU team that beat Arizona at the end of the year was so much better than the team that debuted against Ole Miss.
+            Why leave a program you know and respect just to make a lateral move career wise? You can argue that the prestige of being the OC at Ohio might tempt him, but he would still just be an OC. Hell, in a year or two he will be considered for head coaching jobs if he continues his success at BSU.
+         */
     }
 }
