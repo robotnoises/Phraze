@@ -18,7 +18,8 @@ namespace Phraze
         private HashSet<string> _phraseWords; 
         private string _boundaryStart;
         private string _boundaryEnd;
-        
+        private ICollection<string> _matchedPhrases;
+
         public Phrase(string input)
         {
             _phrase = input;
@@ -40,6 +41,17 @@ namespace Phraze
         public bool FuzzyMatch(string matchText, double confidenceFloor = 0.7)
         {
             return CalculateMatchConfidence(matchText) >= confidenceFloor;
+        }
+
+        public string GetMatchedPhrase(string matchText)
+        {
+            var phraseMatcher = new Fuzzy(_boundaryStart, _boundaryEnd);
+
+            // If matcher can't find any phrase that matches, return with 0 confidence
+            if (!phraseMatcher.HasMatch(matchText)) return string.Empty;
+
+            // Get the exact phrase that was matched
+            return phraseMatcher.GetMatchedString(matchText);
         }
 
         private double CalculateMatchConfidence(string matchText)
