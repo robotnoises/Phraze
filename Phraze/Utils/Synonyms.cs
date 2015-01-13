@@ -20,14 +20,16 @@ namespace Phraze.Utils
 
         public static IEnumerable<string> GetAll(string word)
         {
-            if (!HasSynonym(word))
+            var wordLower = word.ToLower();
+
+            if (!HasSynonym(wordLower))
             { 
                 var setOfOne = new HashSet<string>();
-                setOfOne.Add(word);
+                setOfOne.Add(wordLower);
                 return setOfOne;
             }
-            
-            var list = _synonyms.Where(x => x.Contains(word));
+
+            var list = _synonyms.Where(x => x.Contains(wordLower));
             var flatList = new List<string>();
             var locker = new object();
 
@@ -49,7 +51,7 @@ namespace Phraze.Utils
 
         private static void GetSetWords()
         {
-            var resource = JsonConvert.DeserializeObject<Words>(Resources.synonyms);
+            var resource = JsonConvert.DeserializeObject<Words>(Resources.synonyms.ToLower());
             _synonyms = resource.words.ToList();
 
             var listOfWords = new List<string>();

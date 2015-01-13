@@ -15,44 +15,55 @@ namespace Phraze.Utils
         // Does a "Fuzzy" match for a single word
         public Fuzzy(string input)
         {
-            _matcher = new Regex(ToFuzzyWord(input), RegexOptions.IgnoreCase);
+            _matcher = new Regex(input.ToFuzzyWord(), RegexOptions.IgnoreCase);
         }
 
         // Does a "Fuzzy" match from start point to end endpoint... i.e. a fuzzy phrase
         public Fuzzy(string start, string end)
         {
-            _matcher = new Regex(string.Format("({0})({1})({2})", ToFuzzyWord(start), @"[\w\W]{3,}", ToFuzzyWord(end)), RegexOptions.IgnoreCase);
+            _matcher = new Regex(
+                string.Format("({0})({1})({2})", 
+                start.ToFuzzyWord(FuzzyWordOptions.MatchExact), 
+                @"(...*?)", // Non-greedy with minimum of three chars between boundary words
+                end.ToFuzzyWord(FuzzyWordOptions.MatchExact)), 
+                RegexOptions.IgnoreCase);
         }
 
         // Checks to see if there is a matched word or phrase
         public bool HasMatch(string textToMatch)
         {
-            return _matcher.IsMatch(textToMatch);
+            return _matcher.IsMatch(textToMatch.RemovePunctuation());
         }
-
-        // TODO: Returns only the matched string, need to handle if there are multiple matches
-        public string GetMatchedString(string textToMatch)
+                
+        public ICollection<string> GetMatchedStrings(string textToMatch)
         {
-            var matches = _matcher.Matches(textToMatch).Cast<Match>().Select(x => x.Value).ToList();
-
-            if (matches.Count <= 1) return matches.FirstOrDefault();
-
-            // Todo, if there are multiple matches, return the highest scoring match
-            return matches.FirstOrDefault();
+            return _matcher.Matches(textToMatch.RemovePunctuation()).Cast<Match>().Select(x => x.Value).ToList();
         }
+    }
 
-        private static string ToFuzzyWord(string input)
+    internal static class StringExtensions
+    {
+        public static string ToFuzzyWord(this string input, FuzzyWordOptions option = FuzzyWordOptions.MatchFuzzy)
         {
-            var words = Synonyms.GetAll(input);
+            var wordList = new List<string>(); 
             var locker = new object();
             var fuzzyWord = new StringBuilder(1000);
 
-            Parallel.ForEach(words, word => 
+            if (option != FuzzyWordOptions.NoSynonyms)
             {
-                var asCharArray = word.ToCharArray();
+                wordList.AddRange(Synonyms.GetAll(input));
+            }
+            else 
+            {
+                wordList.Add(input);
+            }
+
+            Parallel.ForEach(wordList, word =>
+            {
+                var asCharArray = word.RemovePunctuation().ToCharArray();
                 var numChars = asCharArray.Length;
 
-                if (numChars <= 3)
+                if (numChars <= 3 || option == FuzzyWordOptions.MatchExact)
                 {
                     lock (locker)
                     {
@@ -63,7 +74,7 @@ namespace Phraze.Utils
 
                 var firstChar = asCharArray[0];
                 var lastChar = asCharArray[numChars - 1];
-                var innerChars = RemoveEnds(asCharArray.ToArray());
+                var innerChars = asCharArray.ToArray().RemoveEnds();
 
                 for (var i = 1; i < numChars - 1; i++)
                 {
@@ -84,20 +95,20 @@ namespace Phraze.Utils
                     fuzzyWord.Append(lastChar + @"\b|");
                 }
             });
-            
-            return TrimEndOrOperator(fuzzyWord.ToString());
+
+            return fuzzyWord.ToString().TrimEndOrOperator();
         }
 
-        private static string TrimEndOrOperator(string input)
-        { 
+        public static string TrimEndOrOperator(this string input)
+        {
             char[] charsToTrim = { ' ', '|' };
-            
+
             return input.TrimEnd(charsToTrim);
         }
-        
+
         // TODO: make an interface for the following
 
-        private static string[] RemoveEnds(string[] array)
+        public static string[] RemoveEnds(this string[] array)
         {
             if (array.Length <= 2) return array;
 
@@ -113,7 +124,7 @@ namespace Phraze.Utils
             return newArray;
         }
 
-        private static char[] RemoveEnds(char[] array)
+        public static char[] RemoveEnds(this char[] array)
         {
             if (array.Length <= 2) return array;
 
@@ -128,5 +139,19 @@ namespace Phraze.Utils
 
             return newArray;
         }
+
+        public static string RemovePunctuation(this string input)
+        {
+            return Regex.Replace(input, @"[^\w\s]", "");
+        }
     }
+
+    [Flags]
+    internal enum FuzzyWordOptions
+    {
+        MatchFuzzy,
+        NoSynonyms,
+        MatchExact
+    }
+    
 }

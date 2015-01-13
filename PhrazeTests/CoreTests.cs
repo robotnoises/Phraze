@@ -13,14 +13,14 @@ namespace PhrazeTests
         public void BasicMatch()
         {
             var targetPhrase = "This is a medium-sized test phrase"; // This is what the application is configured to look for
-            var matchText1 = "Thos is a uh medium phrase."; // This is an input phrase to test against the targetPhrase
+            var matchText1 = "This is a uh meudium phrase."; // This is an input phrase to test against the targetPhrase
             var matchText2 = "Will not match anything."; // This is an input phrase to test against the targetPhrase
 
             var p = new Phrase(targetPhrase);
 
-            var goodMatch = p.FuzzyMatch(matchText1);
-            var badMatch = p.FuzzyMatch(matchText2);
-            var empty = p.FuzzyMatch("");
+            var goodMatch = p.IsMatch(matchText1);
+            var badMatch = p.IsMatch(matchText2);
+            var empty = p.IsMatch("");
 
             Assert.IsTrue(goodMatch);
             Assert.IsFalse(badMatch);
@@ -35,8 +35,8 @@ namespace PhrazeTests
             
             var p = new Phrase(targetPhrase);
 
-            var isMatch = p.FuzzyMatch(matchText);
-
+            var isMatch = p.IsMatch(matchText);
+            var matches = p.Matches(matchText);
             Assert.IsTrue(isMatch);
         }
 
@@ -48,7 +48,7 @@ namespace PhrazeTests
 
             var p = new Phrase(targetPhrase);
 
-            var isMatch = p.FuzzyMatch(matchPhrase);
+            var isMatch = p.IsMatch(matchPhrase);
 
             Assert.IsFalse(isMatch);
         }
@@ -57,10 +57,10 @@ namespace PhrazeTests
         public void FuzzyMatch()
         {
             var matchText = "WHERE ARE YOU /U/CLAUDELEMIEUX?!? You promised me a bet. Don't back down now. It's a straight up bet. No point spreads. No parlays. If Ohio State wins, you have to make a video of yourself singing the Buckeye Battle Cry and post it to /r/cfb along with a brief history of Ohio State Football. If Michigan wins, I'll do the same for your dumb school/fight song. And Ill change my flair since you mentioned that. Do we have a deal?";
-            var targetPhrase = "If ... wins, you must";
+            var targetPhrase = "If ... wins, you have to";
 
             var matcher = new Phrase(targetPhrase);
-            var isMatch = matcher.FuzzyMatch(matchText);
+            var isMatch = matcher.IsMatch(matchText);
             
             Assert.IsTrue(isMatch);
         }
@@ -82,7 +82,7 @@ namespace PhrazeTests
             var targetPhrase = "If ... lose, I'll";
 
             var matcher = new Phrase(targetPhrase);
-            var isMatch = matcher.FuzzyMatch(matchText);
+            var isMatch = matcher.IsMatch(matchText);
 
             Assert.IsTrue(isMatch);
         }
@@ -90,17 +90,24 @@ namespace PhrazeTests
         [TestMethod]
         public void Temp2()
         {
-            var matchText = @"If Georgia Tech doesn't beat FSU, I'll record and post a video of me doing the War Chant for 5 minutes straight.";
-            var targetPhrase = "If ... lose, I'll";
+            var list = new List<string>();
+            var matchText = @"If this were the BCS era, we'd still get this game, but it'd be the Rose Bowl. Pretty crazy.";
+            
+            var t1 = "If ... win, I'll";
+            var t2 = "Anyone wanna bet";
+            
+            list.Add(t1);
+            list.Add(t2);
+            
+            var matcher = new PhraseCollection(list);
+            var isMatch = matcher.HasMatch(matchText);
+            var matches = matcher.Matches(matchText);
 
-            var matcher = new Phrase(targetPhrase);
-            var isMatch = matcher.FuzzyMatch(matchText);
-
-            Assert.IsTrue(isMatch);
-
+            Assert.IsFalse(isMatch);
+            Assert.IsFalse(matches.Count > 0);
         }
 
-        /* Weird matches */
+        /* False positives */
 
         /*
             I tried smoke recently and it was fantastic, but a little pricey. It has a really cool view of downtown Dallas.

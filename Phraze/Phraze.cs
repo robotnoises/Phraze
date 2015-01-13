@@ -18,7 +18,7 @@ namespace Phraze
         private HashSet<string> _phraseWords; 
         private string _boundaryStart;
         private string _boundaryEnd;
-        private ICollection<string> _matchedPhrases;
+        private Fuzzy _phraseMatcher;
 
         public Phrase(string input)
         {
@@ -31,6 +31,8 @@ namespace Phraze
                 _phraseWords = new HashSet<string>(wordArray);
                 _boundaryStart = RemoveNonWordChars(wordArray[0]);
                 _boundaryEnd = RemoveNonWordChars(wordArray[wordArray.Length - 1]);
+
+                SetPhraseMatcher();
             }
             else
             {
@@ -38,36 +40,82 @@ namespace Phraze
             }
         }
 
-        public bool FuzzyMatch(string matchText, double confidenceFloor = 0.7)
+        public bool IsMatch(string input, double confidenceFloor = 0.7)
         {
-            return CalculateMatchConfidence(matchText) >= confidenceFloor;
+            var isMatch = false;
+
+            if (!_phraseMatcher.HasMatch(input)) return isMatch;
+
+            var fuzzyMatches = _phraseMatcher.GetMatchedStrings(input);
+            var locker = new object();
+
+            Parallel.ForEach(fuzzyMatches, match => 
+            { 
+                if (CalculateMatchConfidence(match) >= confidenceFloor)
+                {
+                    lock (locker) isMatch = true;
+                }
+            });
+
+            return isMatch;
+            
+            // return CalculateMatchConfidence(matchText) >= confidenceFloor;
         }
 
-        public string GetMatchedPhrase(string matchText)
+        public ICollection<string> Matches(string input, double confidenceFloor = 0.7)
         {
-            var phraseMatcher = new Fuzzy(_boundaryStart, _boundaryEnd);
+            var matches = new HashSet<string>();
 
-            // If matcher can't find any phrase that matches, return with 0 confidence
-            if (!phraseMatcher.HasMatch(matchText)) return string.Empty;
+            if (!_phraseMatcher.HasMatch(input)) return matches;
 
-            // Get the exact phrase that was matched
-            return phraseMatcher.GetMatchedString(matchText);
+            var fuzzyMatches = _phraseMatcher.GetMatchedStrings(input);
+            var locker = new object();
+
+            Parallel.ForEach(fuzzyMatches, match =>
+            {
+                if (CalculateMatchConfidence(match) >= confidenceFloor)
+                {
+                    lock (locker) matches.Add(match);
+                }
+            });
+
+            return matches;
         }
 
-        private double CalculateMatchConfidence(string matchText)
-        {
-            var phraseMatcher = new Fuzzy(_boundaryStart, _boundaryEnd);
+        //public string GetTopMatchedString(string matchText, double confidenceFloor = 0.7)
+        //{
+        //    var matches = GetMatchedStrings(matchText);
+        //    var withConfidence = new Dictionary<string, double>();
+        //    var locker = new object();
 
+        //    Parallel.ForEach(matches, match =>
+        //    {
+        //        lock (locker) withConfidence.Add(match, CalculateMatchConfidence(match));
+        //    });
+
+        //    var top = withConfidence.OrderByDescending(x => x.Value).Select(x => x.Key).Take(1);
+
+        //    return top.FirstOrDefault();
+        //}
+
+        private void SetPhraseMatcher()
+        {
+            _phraseMatcher = _phraseMatcher ?? new Fuzzy(_boundaryStart, _boundaryEnd);
+        }
+
+        private double CalculateMatchConfidence(string matchedString)
+        {
             // If matcher can't find any phrase that matches, return with 0 confidence
-            if (!phraseMatcher.HasMatch(matchText)) return 0.0;
+            // if (!_phraseMatcher.HasMatch(matchedString)) return 0.0;
 
             // Get the exact phrase that was matched
-            var matchedPhrase = phraseMatcher.GetMatchedString(matchText);
+            // var matchedPhrases = _phraseMatcher.GetMatchedStrings(matchedString);
+            // var topPhrase = matchedPhrases.FirstOrDefault(); // Todo, need to get the top match here
 
             // Create a word array from the target phrase
             var targetPhraseWords = _phrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries).ToList();
             
-            // Create a HashSet of "Fuzzy" words from the list of tart words
+            // Create a HashSet of "Fuzzy" words from the list of target words
             var fuzzyWords = new HashSet<Fuzzy>(targetPhraseWords.Select(x => new Fuzzy(x)));
 
             // Count-up the matches
@@ -76,7 +124,7 @@ namespace Phraze
 
             Parallel.ForEach(fuzzyWords, fuzzyWord =>
             {
-                if (fuzzyWord.HasMatch(matchedPhrase))
+                if (fuzzyWord.HasMatch(matchedString))
                 {
                     lock (locker) matchedWordsCount++;
                 }
@@ -89,12 +137,12 @@ namespace Phraze
             scores.Add(matchedWordsCount / targetPhraseWords.Count);
 
             // How many matches were there within the context of the targetphrase?
-            scores.Add(matchedWordsCount / matchedPhrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries).Count());
+            scores.Add(matchedWordsCount / matchedString.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries).Count());
 
             // Average the results            
             return DoAverage(scores);
         }
-        
+
         private string RemoveNonWordChars(string word)
         {
             return Regex.Replace(word, @"[\W]", "");
@@ -130,7 +178,7 @@ namespace Phraze
 
             Parallel.ForEach(this, phrase =>
             {
-                if (phrase.FuzzyMatch(matchText))
+                if (phrase.IsMatch(matchText))
                 {
                     matchFound = true;
                 }
@@ -139,18 +187,18 @@ namespace Phraze
             return matchFound;
         }
 
-        public PhraseCollection GetMatches(string matchText)
+        public ICollection<string> Matches(string matchText)
         {
-            var matchedPhrases = new PhraseCollection();
+            var matchedPhrases = new List<string>();
             var locker = new object();
 
             Parallel.ForEach(this, phrase => 
             {
-                if (phrase.FuzzyMatch(matchText))
+                if (phrase.IsMatch(matchText))
                 {
                     lock (locker)
                     {
-                        matchedPhrases.Add(phrase);
+                        matchedPhrases.AddRange(phrase.Matches(matchText));
                     }
                 }
             });
