@@ -107,6 +107,26 @@ namespace PhrazeTests
             Assert.IsFalse(matches.Count > 0);
         }
 
+        [TestMethod]
+        public void Temp3()
+        {
+            var list = new List<string>();
+            var matchText = @"aksdxxpLllsfo9 zidjl";
+
+            var t1 = "If ... win, I'll";
+            var t2 = "aksdxxpLllsfo9 zidjl";
+
+            list.Add(t1);
+            list.Add(t2);
+
+            var matcher = new PhraseCollection(list);
+            var isMatch = matcher.HasMatch(matchText);
+            var matches = matcher.Matches(matchText);
+
+            Assert.IsTrue(isMatch);
+
+        }
+
         /* False positives */
 
         /*

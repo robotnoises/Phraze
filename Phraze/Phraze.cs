@@ -58,8 +58,6 @@ namespace Phraze
             });
 
             return isMatch;
-            
-            // return CalculateMatchConfidence(matchText) >= confidenceFloor;
         }
 
         public ICollection<string> Matches(string input, double confidenceFloor = 0.7)
@@ -100,18 +98,14 @@ namespace Phraze
 
         private void SetPhraseMatcher()
         {
-            _phraseMatcher = _phraseMatcher ?? new Fuzzy(_boundaryStart, _boundaryEnd);
+            if (_phraseMatcher == null)
+            {
+                _phraseMatcher = _phraseWords.Count > 2 ? new Fuzzy(_boundaryStart, _boundaryEnd) : new Fuzzy(_phrase);
+            }
         }
 
         private double CalculateMatchConfidence(string matchedString)
         {
-            // If matcher can't find any phrase that matches, return with 0 confidence
-            // if (!_phraseMatcher.HasMatch(matchedString)) return 0.0;
-
-            // Get the exact phrase that was matched
-            // var matchedPhrases = _phraseMatcher.GetMatchedStrings(matchedString);
-            // var topPhrase = matchedPhrases.FirstOrDefault(); // Todo, need to get the top match here
-
             // Create a word array from the target phrase
             var targetPhraseWords = _phrase.Split(Delimeters.All, StringSplitOptions.RemoveEmptyEntries).ToList();
             
